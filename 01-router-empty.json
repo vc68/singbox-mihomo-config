@@ -1,0 +1,336 @@
+{
+  "$schema": "https://sing-box.sagernet.org/schema.json",
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns-cn",
+        "type": "https",
+        "server": "223.5.5.5",
+        "detour": "直连"
+      },
+      {
+        "tag": "dns-remote",
+        "type": "https",
+        "server": "1.1.1.1",
+        "detour": "默认代理"
+      }
+    ],
+    "rules": [
+      {
+        "query_type": [
+          "HTTPS",
+          "SVCB"
+        ],
+        "action": "reject"
+      },
+      {
+        "domain_suffix": [
+          "liangxin.xyz",
+          "pqjc.site",
+          "xn--cp3a08l.com"
+        ],
+        "server": "dns-cn"
+      },
+      {
+        "clash_mode": "Direct",
+        "server": "dns-cn"
+      },
+      {
+        "clash_mode": "Global",
+        "server": "dns-remote"
+      },
+      {
+        "rule_set": [
+          "geosite-private",
+          "geosite-cn",
+          "geosite-geolocation-cn"
+        ],
+        "server": "dns-cn"
+      },
+      {
+        "action": "evaluate",
+        "server": "dns-remote"
+      },
+      {
+        "match_response": true,
+        "rule_set": "geoip-cn",
+        "server": "dns-cn",
+        "rewrite_ttl": 1
+      }
+    ],
+    "final": "dns-remote",
+    "strategy": "prefer_ipv4",
+    "cache_capacity": 8192,
+    "optimistic": {
+      "enabled": true
+    },
+    "reverse_mapping": true,
+    "timeout": "5s"
+  },
+  "ntp": {
+    "enabled": true,
+    "server": "ntp.aliyun.com"
+  },
+  "inbounds": [
+    {
+      "tag": "tun-in",
+      "type": "tun",
+      "address": [
+        "172.19.0.1/30",
+        "fdfe:dcba:9876::1/126"
+      ],
+      "mtu": 9000,
+      "auto_route": true,
+      "auto_redirect": true,
+      "strict_route": true,
+      "dns_mode": "hijack",
+      "route_exclude_address": [
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "100.64.0.0/10",
+        "fc00::/7",
+        "fe80::/10"
+      ]
+    },
+    {
+      "tag": "mixed-in",
+      "type": "mixed",
+      "listen": "0.0.0.0",
+      "listen_port": 7890
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "默认代理",
+      "type": "selector",
+      "outbounds": [
+        "自动选择",
+        "新加坡自动",
+        "日本自动",
+        "美国自动",
+        "手动选择"
+      ]
+    },
+    {
+      "tag": "漏网之鱼",
+      "type": "selector",
+      "outbounds": [
+        "默认代理",
+        "自动选择",
+        "新加坡自动",
+        "日本自动",
+        "美国自动",
+        "手动选择",
+        "直连"
+      ]
+    },
+    {
+      "tag": "自动选择",
+      "type": "urltest",
+      "outbounds": [],
+      "url": "http://cp.cloudflare.com/generate_204",
+      "interval": "10m",
+      "tolerance": 50
+    },
+    {
+      "tag": "新加坡自动",
+      "type": "urltest",
+      "outbounds": [],
+      "url": "http://cp.cloudflare.com/generate_204",
+      "interval": "10m",
+      "tolerance": 50
+    },
+    {
+      "tag": "日本自动",
+      "type": "urltest",
+      "outbounds": [],
+      "url": "http://cp.cloudflare.com/generate_204",
+      "interval": "10m",
+      "tolerance": 50
+    },
+    {
+      "tag": "美国自动",
+      "type": "urltest",
+      "outbounds": [],
+      "url": "http://cp.cloudflare.com/generate_204",
+      "interval": "10m",
+      "tolerance": 50
+    },
+    {
+      "tag": "手动选择",
+      "type": "selector",
+      "outbounds": []
+    },
+    {
+      "tag": "GLOBAL",
+      "type": "selector",
+      "outbounds": [
+        "默认代理",
+        "漏网之鱼",
+        "自动选择",
+        "新加坡自动",
+        "日本自动",
+        "美国自动",
+        "手动选择",
+        "直连"
+      ]
+    },
+    {
+      "tag": "直连",
+      "type": "direct",
+      "domain_resolver": "dns-cn"
+    }
+  ],
+  "http_clients": [
+    {
+      "tag": "http-direct",
+      "detour": "直连"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "port": 53,
+        "action": "hijack-dns"
+      },
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "domain_suffix": "push.apple.com"
+          },
+          {
+            "rule_set": "geoip-telegram"
+          }
+        ],
+        "invert": true,
+        "action": "sniff",
+        "sniffer": [
+          "http",
+          "tls",
+          "quic",
+          "stun",
+          "dns"
+        ],
+        "timeout": "100ms"
+      },
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
+        "domain_suffix": [
+          "liangxin.xyz",
+          "pqjc.site",
+          "xn--cp3a08l.com"
+        ],
+        "outbound": "自动选择"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "直连"
+      },
+      {
+        "rule_set": "geosite-private",
+        "outbound": "直连"
+      },
+      {
+        "port": 853,
+        "action": "reject",
+        "no_drop": true
+      },
+      {
+        "clash_mode": "Direct",
+        "outbound": "直连"
+      },
+      {
+        "clash_mode": "Global",
+        "outbound": "GLOBAL"
+      },
+      {
+        "rule_set": "geosite-category-ads-all",
+        "action": "reject"
+      },
+      {
+        "network": "icmp",
+        "outbound": "直连"
+      },
+      {
+        "rule_set": [
+          "geosite-cn",
+          "geosite-geolocation-cn"
+        ],
+        "outbound": "直连"
+      },
+      {
+        "rule_set": "geosite-geolocation-!cn",
+        "outbound": "默认代理"
+      },
+      {
+        "inbound": "mixed-in",
+        "action": "resolve"
+      },
+      {
+        "rule_set": "geoip-cn",
+        "outbound": "直连"
+      }
+    ],
+    "rule_set": [
+      {
+        "tag": [
+          "geosite-private",
+          "geosite-cn",
+          "geosite-geolocation-cn",
+          "geosite-geolocation-!cn",
+          "geosite-category-ads-all"
+        ],
+        "type": "remote",
+        "format": "binary",
+        "url": "https://gh-proxy.com/https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/{tag}.srs",
+        "http_client": "http-direct",
+        "update_interval": "1d"
+      },
+      {
+        "tag": "geoip-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://gh-proxy.com/https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
+        "http_client": "http-direct",
+        "update_interval": "1d"
+      },
+      {
+        "tag": "geoip-telegram",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://gh-proxy.com/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/telegram.srs",
+        "http_client": "http-direct",
+        "update_interval": "1d"
+      }
+    ],
+    "final": "漏网之鱼",
+    "auto_detect_interface": true,
+    "default_http_client": "http-direct",
+    "default_domain_resolver": {
+      "server": "dns-cn"
+    }
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true,
+      "path": "/etc/sing-box/cache.db",
+      "store_dns": true
+    },
+    "clash_api": {
+      "external_controller": "0.0.0.0:9090",
+      "secret": "singbox",
+      "external_ui": "/etc/sing-box/panel",
+      "default_mode": "Rule"
+    }
+  }
+}

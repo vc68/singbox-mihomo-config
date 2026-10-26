@@ -1,0 +1,18 @@
+# 密码库，绝对不要提交
+keepass.kdbx
+*.kdbx
+
+# Syncthing 标记
+.stfolder/
+stfolder/
+
+# 备份文件
+*.bak
+*.bak-*
+*.bak2-*
+*.bak3-*
+*.bak4-*
+
+# 日志与缓存
+*.log
+cache.db
