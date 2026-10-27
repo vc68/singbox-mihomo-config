@@ -155,3 +155,27 @@ GLOBAL      selector 全部
 | `singbox-template.js` | 节点注入脚本 |
 | `mihomo-merge.yaml` | mihomo 合并模板 |
 | `README.md` | 本文件 |
+
+---
+
+## 八、IPv6 已关闭（2026-10-27 更新）
+
+三份 sing-box 模板统一改为 **IPv4-only**。原因：原先 `dns.strategy` 是 `prefer_ipv4`，它只是「优先」用 IPv4，**AAAA 记录照样会解析并返回给应用**，应用拿到 IPv6 地址后自行发起连接，进 TUN 后按规则走「直连」出口，于是出现「解析成功但 IPv6 直连失败 / 卡住等超时」。
+
+| 位置 | 改前 | 改后 |
+|---|---|---|
+| `dns.strategy` | `prefer_ipv4` | `ipv4_only` |
+| `inbounds[tun].address` | `172.19.0.1/30` + `fdfe:dcba:9876::1/126` | 仅 `172.19.0.1/30` |
+| `outbounds[直连].domain_resolver` | `"dns-cn"` | `{"server":"dns-cn","strategy":"ipv4_only"}` |
+| `route.default_domain_resolver` | `{"server":"dns-cn"}` | 追加 `"strategy": "ipv4_only"` |
+
+效果：
+
+- DNS 不再返回 AAAA，应用拿不到 IPv6 地址，从根上不再发起 IPv6 连接；
+- 代理不再接管 IPv6 流量（TUN 无 IPv6 地址），日志里不会再有 IPv6 直连失败的报错；
+- 节点域名解析同样只取 IPv4，避免连节点时踩 IPv6 的坑；
+- `route_exclude_address` 里的 `fc00::/7`、`fe80::/10` **保留**，局域网 IPv6 设备仍可直连访问。
+
+需要恢复 IPv6 时反向改回即可：`dns.strategy` 改 `prefer_ipv4`，并把 `fdfe:dcba:9876::1/126` 加回 tun 的 `address`。
+
+改动已用 `sing-box check`（v1.14.3）校验通过。
