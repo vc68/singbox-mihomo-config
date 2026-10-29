@@ -179,3 +179,15 @@ GLOBAL      selector 全部
 需要恢复 IPv6 时反向改回即可：`dns.strategy` 改 `prefer_ipv4`，并把 `fdfe:dcba:9876::1/126` 加回 tun 的 `address`。
 
 改动已用 `sing-box check`（v1.14.3）校验通过。
+
+---
+
+## 九、显式标注 action（2026-10-30 更新）
+
+三份模板的 DNS 规则和路由规则统一补上了 `action: "route"` 显式声明（每份 5 条 DNS + 9 条路由，共 14 处）。
+
+**原因**：`dns.rules[].server`、`dns.rules[].rewrite_ttl`、`route.rules[].outbound` 自 **sing-box 1.11.0 起均已弃用**，官方迁移方向是把这些字段放进 Rule Action（`action: "route"` + 对应字段）。不写 `action` 时内核默认按 `route` 处理，因此**本次改动语义完全等价、零功能变更**（已验证：去掉显式 `action` 后与原文件逐字节相同）。
+
+**版本约束**：本套配置要求 **sing-box ≥ 1.14.0**，因为用到 `action: "evaluate"`、`match_response`、`dns.timeout`、`dns_mode`（均为 1.14.0 引入）。低于该版本会直接报 `unknown DNS rule action` 启动失败。
+
+**校验**：三份模板均已用 `sing-box check`（v1.14.4）通过。注意校验前必须先填入节点，否则会报 `initialize outbound[N]: missing tags`，这是空模板的固有行为，不是配置错误。
