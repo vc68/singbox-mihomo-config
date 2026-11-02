@@ -110,6 +110,7 @@
         "新加坡自动",
         "日本自动",
         "美国自动",
+        "谷歌相册",
         "手动选择"
       ]
     },
@@ -122,6 +123,7 @@
         "新加坡自动",
         "日本自动",
         "美国自动",
+        "谷歌相册",
         "手动选择",
         "直连"
       ]
@@ -159,6 +161,14 @@
       "tolerance": 50
     },
     {
+      "tag": "谷歌相册",
+      "type": "urltest",
+      "outbounds": [],
+      "url": "https://photos.googleapis.com/",
+      "interval": "5m",
+      "tolerance": 50
+    },
+    {
       "tag": "手动选择",
       "type": "selector",
       "outbounds": []
@@ -173,6 +183,7 @@
         "新加坡自动",
         "日本自动",
         "美国自动",
+        "谷歌相册",
         "手动选择",
         "直连"
       ]
@@ -266,6 +277,15 @@
         "network": "icmp",
         "action": "route",
         "outbound": "直连"
+      },
+      {
+        "domain_suffix": [
+          "photos.googleapis.com",
+          "photos.google.com",
+          "photoslibrary.googleapis.com"
+        ],
+        "action": "route",
+        "outbound": "谷歌相册"
       },
       {
         "rule_set": [

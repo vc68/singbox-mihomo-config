@@ -65,6 +65,7 @@ const RULES = [
   ['新加坡自动', new RegExp(R_SG, 'i')],
   ['日本自动',   new RegExp(R_JP, 'i')],
   ['美国自动',   new RegExp(R_US, 'i')],
+  ['谷歌相册',   new RegExp(R_ALL, 'i')],
   ['手动选择',   new RegExp(R_ALL, 'i')],
 ]
 
