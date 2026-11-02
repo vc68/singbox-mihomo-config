@@ -130,7 +130,7 @@
       "tag": "自动选择",
       "type": "urltest",
       "outbounds": [],
-      "url": "http://cp.cloudflare.com/generate_204",
+      "url": "https://photos.googleapis.com/",
       "interval": "10m",
       "tolerance": 50
     },
@@ -138,7 +138,7 @@
       "tag": "新加坡自动",
       "type": "urltest",
       "outbounds": [],
-      "url": "http://cp.cloudflare.com/generate_204",
+      "url": "https://photos.googleapis.com/",
       "interval": "10m",
       "tolerance": 50
     },
@@ -146,7 +146,7 @@
       "tag": "日本自动",
       "type": "urltest",
       "outbounds": [],
-      "url": "http://cp.cloudflare.com/generate_204",
+      "url": "https://photos.googleapis.com/",
       "interval": "10m",
       "tolerance": 50
     },
@@ -154,7 +154,7 @@
       "tag": "美国自动",
       "type": "urltest",
       "outbounds": [],
-      "url": "http://cp.cloudflare.com/generate_204",
+      "url": "https://photos.googleapis.com/",
       "interval": "10m",
       "tolerance": 50
     },
