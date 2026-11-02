@@ -78,9 +78,10 @@ for (const ob of config.outbounds || []) {
   log(`🕳 ${ob.tag} 注入 ${tags.length} 个节点`)
 }
 
-// 空组兜底：用全部节点
+// 空组兜底：任何空的 urltest / selector 都用全部节点，
+// 避免模板新增了组但这里漏配 RULES 时出现空组，导致 sing-box 启动报 missing tags
 for (const ob of config.outbounds || []) {
-  if (!RULES.some(([name]) => name === ob.tag)) continue
+  if (ob.type !== 'urltest' && ob.type !== 'selector') continue
   if (!Array.isArray(ob.outbounds) || ob.outbounds.length === 0) {
     ob.outbounds = nodes.map(n => n.tag)
     log(`⚠️ ${ob.tag} 为空，回退为全部节点`)
