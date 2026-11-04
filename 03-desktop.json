@@ -44,7 +44,8 @@
       {
         "clash_mode": "Global",
         "action": "route",
-        "server": "dns-remote"
+        "server": "dns-remote",
+        "timeout": "2s"
       },
       {
         "rule_set": [
@@ -57,7 +58,8 @@
       },
       {
         "action": "evaluate",
-        "server": "dns-remote"
+        "server": "dns-remote",
+        "timeout": "2s"
       },
       {
         "match_response": true,
@@ -74,7 +76,7 @@
       "enabled": true
     },
     "reverse_mapping": true,
-    "timeout": "5s"
+    "timeout": "2s"
   },
   "inbounds": [
     {
@@ -119,7 +121,8 @@
         "日本自动",
         "美国自动",
         "谷歌相册",
-        "手动选择"
+        "手动选择",
+        "直连"
       ]
     },
     {
@@ -140,32 +143,32 @@
       "tag": "自动选择",
       "type": "urltest",
       "outbounds": [],
-      "url": "https://photos.googleapis.com/",
-      "interval": "10m",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "3m",
       "tolerance": 50
     },
     {
       "tag": "新加坡自动",
       "type": "urltest",
       "outbounds": [],
-      "url": "https://photos.googleapis.com/",
-      "interval": "10m",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "3m",
       "tolerance": 50
     },
     {
       "tag": "日本自动",
       "type": "urltest",
       "outbounds": [],
-      "url": "https://photos.googleapis.com/",
-      "interval": "10m",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "3m",
       "tolerance": 50
     },
     {
       "tag": "美国自动",
       "type": "urltest",
       "outbounds": [],
-      "url": "https://photos.googleapis.com/",
-      "interval": "10m",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "3m",
       "tolerance": 50
     },
     {
@@ -175,7 +178,7 @@
         "直连"
       ],
       "url": "https://photos.googleapis.com/",
-      "interval": "5m",
+      "interval": "3m",
       "tolerance": 50
     },
     {
