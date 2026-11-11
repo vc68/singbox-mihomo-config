@@ -173,13 +173,10 @@
     },
     {
       "tag": "谷歌相册",
-      "type": "urltest",
+      "type": "selector",
       "outbounds": [
         "直连"
-      ],
-      "url": "https://photos.googleapis.com/",
-      "interval": "3m",
-      "tolerance": 50
+      ]
     },
     {
       "tag": "手动选择",
