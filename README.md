@@ -117,16 +117,19 @@ https://gh-proxy.com/https://raw.githubusercontent.com/vc68/singbox-mihomo-confi
 三份模板都是「空壳」，策略组里没有节点，节点由注入脚本填。
 
 ```
-默认代理    selector → 自动选择 / 新加坡自动 / 日本自动 / 美国自动 / 手动选择
-漏网之鱼    selector → 默认代理 / 自动选择 / 新加坡自动 / 日本自动 / 美国自动 / 手动选择 / 直连
+默认代理    selector → 自动选择 / 新加坡自动 / 日本自动 / 美国自动 / 谷歌相册 / 手动选择 / 直连
+漏网之鱼    selector → 默认代理 / 自动选择 / 新加坡自动 / 日本自动 / 美国自动 / 谷歌相册 / 手动选择 / 直连
 自动选择    urltest  全部节点
 新加坡自动  urltest  名称含 新加坡 / 狮城 / SG / Singapore
 日本自动    urltest  名称含 日本 / 东京 / 大阪 / JP / Japan
 美国自动    urltest  名称含 美国 / 洛杉矶 / US / United States
+谷歌相册    selector 全部节点（手动选，不自动测速）
 手动选择    selector 全部节点
 GLOBAL      selector 全部
 直连        direct
 ```
+
+> 谷歌相册组是 **手动选择**（sing-box `selector` / mihomo `select`），不是自动测速。原因：相册上传对节点很挑，测速结果和实际上传成功率经常不一致，交给内核自动挑反而更难用。mihomo 侧配合 `profile.store-selected` 会记住你选的节点。
 
 ---
 
