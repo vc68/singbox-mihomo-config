@@ -38,8 +38,7 @@
       },
       {
         "domain_suffix": [
-          "p2p.huya.com",
-          "va.huya.com"
+          "p2p.huya.com"
         ],
         "action": "predefined",
         "rcode": "NXDOMAIN"
@@ -251,22 +250,6 @@
       },
       {
         "type": "logical",
-        "mode": "and",
-        "rules": [
-          {
-            "network": "udp"
-          },
-          {
-            "port_range": [
-              "7784:7800"
-            ]
-          }
-        ],
-        "action": "reject",
-        "no_drop": true
-      },
-      {
-        "type": "logical",
         "mode": "or",
         "rules": [
           {
@@ -290,6 +273,13 @@
       {
         "protocol": "dns",
         "action": "hijack-dns"
+      },
+      {
+        "domain_suffix": [
+          "p2p.huya.com"
+        ],
+        "action": "reject",
+        "no_drop": true
       },
       {
         "domain_suffix": [

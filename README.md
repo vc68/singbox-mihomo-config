@@ -197,43 +197,46 @@ GLOBAL      selector 全部
 
 ---
 
-## 十、国内视频/直播 CDN 直连 + 虎牙 P2P 拦截（2026-11-16 更新）
+## 十、国内视频/直播 CDN 直连 + 拦截虎牙 PCDN（2026-11-16 更新）
 
-### 问题现象
+### 实测数据（不是推测）
 
-看 B 站、虎牙直播卡顿，但在面板里看连接详情，部分连接明明显示「完整链路 = 直连」。也就是说：**走直连的连接一样卡**。
+在 Windows PC（192.168.2.115）+ 软路由（192.168.2.100，sing-box 1.14.4）上抓的真实连接：
 
-### 根因一：直播 CDN 域名被「从代理出口」解析，拿到的是海外节点 IP
+| 观测项 | 实测值 |
+|---|---|
+| 虎牙所有连接的分流结果 | `rule_set=geoip-cn => route(直连)`，**无一条走代理** |
+| 播放器日志 | `use_p2p:1 use_xp2p:0 use_pcdn:1 has_used_pcdn:1` |
+| 拉流地址 | `flvurl: http://hs.flv.huya.com/...`（官方 CDN）<br>`p2purl: http://hs.p2p.huya.com/huyalive`（PCDN，优先使用） |
+| P2P 节省率 | **99.3%**（即 99.3% 的流量走 PCDN） |
+| 当前 P2P 节点数 | 46 ~ 55 个 |
+| PCDN 实时速率 | **116 KB/s**（0.93 Mbps） |
+| 官方 CDN 实时速率 | 156 KB/s（1.25 Mbps，实时码率） |
+| 实测 PCDN 数据端口 | `3093 / 7701 / 4481 / 1461 / 20006 / 20100 / 20103 / 20469 / 22067 / 2481 / 3444` |
+| `hs.p2p.huya.com` 解析 | CNAME → `volcfcdndvs.com` → `volclivedvs.com`（**火山引擎 CDN**）→ `116.153.42.191` 等 |
 
-`dns.rules` 里，不在 `geosite-cn` 的域名会走：
+结论：**代理配置与直播卡顿无关**。真正的原因是 PCDN 供流不足，以及（在弱机上）解码积压。
 
-```
-{ "action": "evaluate", "server": "dns-remote", "timeout": "2s" },
-{ "match_response": true, "rule_set": "geoip-cn", "action": "route", "server": "dns-cn", "rewrite_ttl": 1 }
-```
+### 根因一：直播 CDN 域名被「从代理出口」解析
 
-`dns-remote` 的 `detour` 是「默认代理」，也就是**经代理去问 1.1.1.1**。而直播 CDN 域名——`*.szbdyd.com`、`*.mcdn.bilivideo.cn`、`*.hycdn.cn`、`*.huyacdn.com`——都不在 `geosite-cn` 里。
+`dns.rules` 里不在 `geosite-cn` 的域名会走 `evaluate → dns-remote`，而 `dns-remote` 的 `detour` 是「默认代理」，即**经代理问 1.1.1.1**。直播 CDN 域名（`*.szbdyd.com`、`*.mcdn.bilivideo.cn`、`*.hycdn.cn`、`*.huyacdn.com`）都不在 `geosite-cn` 里，CDN 会按查询来源就近调度，从海外出口查回来的是**海外节点 IP**，`match_response geoip-cn` 判定失败，客户端拿着海外 IP 去连，绕一圈回国。
 
-CDN 会按查询来源做就近调度：从新加坡/日本的出口查，返回的就是**海外节点 IP**。于是 `match_response geoip-cn` 判定失败，`dns-remote` 的海外 IP 被直接交给客户端，客户端去连海外 CDN，连接落到「漏网之鱼 → 默认代理」，绕地球一圈回国，自然卡。
+> 注意：TUN 是三层入站，应用先解析再发连接，目标地址本来就是 IP，`geoip-cn` 规则是生效的。问题不在「规则没匹配上」，而在「IP 本身被判成了境外」。
 
-> 这里容易误判的一点：TUN 是三层入站，应用先解析再发连接，所以**目标地址本来就是 IP**，`geoip-cn` 规则是生效的。问题不在「规则没匹配上」，而在「IP 本身被判成了境外」。
+### 根因二：虎牙 PCDN（不是传统 P2P）
 
-### 根因二：虎牙 P2P
+播放器优先用 `http://hs.p2p.huya.com/huyalive` 拉流，实测 **99.3% 的流量走 PCDN 边缘节点**（火山引擎 / PPIO / 星域那类）。日志里 `P2P 卡比`、`补片有效率 92.86%` 说明约 7% 的补片失败。
 
-虎牙 PC 客户端用 UDP（实测目标端口 `7784`）从**其它用户的家用宽带**拉流，同时还要给别人供流（实测上行 170 KB/s）。这条连接确实是直连，但：
-
-- 带宽上限由对端家宽决定，实测卡在 660 KB/s，只够「蓝光 4M」；
-- 对端随时可能下线，画面就断；
-- UDP 全部经过 sing-box 的用户态协议栈，P2P 又是高 PPS 小包，软路由上容易吃满单核。
+**关键：PCDN 端口是动态的**（实测 3093、7701、4481、20006、20100、20469……），所以**按固定端口拦截（比如 7784）无效**，必须从**调度域名**下手。
 
 ### 改动清单
 
 | 文件 | 位置 | 改动 |
 |---|---|---|
-| 三份模板 | `dns.rules`，在 `clash_mode` 规则**之前** | 新增：国内视频/直播 CDN 域名 → `dns-cn` |
-| 三份模板 | `dns.rules`，紧跟上面那条之后 | 新增：`p2p.huya.com` / `va.huya.com` → `predefined` + `NXDOMAIN` |
-| 三份模板 | `route.rules`，在 `geosite-cn` 规则**之前** | 新增：同一份 CDN 域名 → `直连` |
-| 三份模板 | `route.rules`，紧跟 `port 53 hijack-dns` 之后 | 新增：UDP `7784-7800` → `reject`（`no_drop: true`） |
+| 三份模板 | `dns.rules`，在 `clash_mode` 规则之前 | 新增：国内视频/直播 CDN 域名 → `dns-cn` |
+| 三份模板 | `dns.rules`，紧跟上面那条之后 | 新增：`p2p.huya.com` → `predefined` + `NXDOMAIN` |
+| 三份模板 | `route.rules`，`protocol: dns` 之后 | 新增：`p2p.huya.com` → `reject`（L7 兜底，靠 sniff 认域名） |
+| 三份模板 | `route.rules`，在 `geosite-cn` 之前 | 新增：同一份 CDN 域名 → `直连` |
 | `02-mobile.json` | `inbounds[tun].route_exclude_address` | 补 `100.64.0.0/10`（运营商 CGNAT 段） |
 
 新增的 CDN 域名列表（三份模板一致）：
@@ -246,24 +249,22 @@ douyinvod.com douyincdn.com  pstatp.com    byteimg.com  snssdk.com
 kuaishou.com  ks-cdn.com
 ```
 
-**顺序很关键**：`p2p.huya.com` 的 NXDOMAIN 规则必须排在 `huya.com → dns-cn` 之前，否则 P2P 域名会先被 `huya.com` 的 suffix 命中，拦截失效。
+### 三个必须注意的顺序 / 范围问题
+
+1. **`p2p.huya.com` 的 NXDOMAIN 必须排在 `huya.com → dns-cn` 之前**，否则会被 `huya.com` 的 suffix 先命中，拦截失效。
+2. **`p2p.huya.com` 的 `reject` 必须排在 `sniff` 之后**，否则目标还是裸 IP、认不出域名，规则匹配不到。
+3. **绝对不要拦 `va.huya.com`**。它是 WebSocket 信令域名（`Config\netconfig.json` 里的 `*-ws.va.huya.com`），拦掉会断弹幕和 IM。
 
 ### 为什么没有放开 `resolve` 规则
 
-`route.rules` 里现在是 `{ "inbound": "mixed-in", "action": "resolve" }`，这个限制是**正确且必要**的：
-
-- TUN 入站是三层，应用先解析域名再发连接，进到 sing-box 时目标已经是 IP，`geoip-cn` 直接可匹配，不需要 `resolve`；
-- 只有 `mixed-in`（HTTP/SOCKS 的 CONNECT 带主机名）才需要先解析成 IP；
-- 如果放开到所有入站，不在 `geosite` 里的被墙域名会被 `dns-cn` 解析成污染 IP，再以 IP 形式交给代理，反而连不上。
-
-所以本次**不动**这条规则。
+`route.rules` 里 `{ "inbound": "mixed-in", "action": "resolve" }` 的限制是**正确且必要**的：TUN 是三层入站，应用先解析域名再发连接，进到 sing-box 时目标已经是 IP，`geoip-cn` 直接可匹配；只有 `mixed-in`（HTTP/SOCKS 的 CONNECT 带主机名）才需要先解析。放开到所有入站会让不在 `geosite` 里的被墙域名被 `dns-cn` 解析成污染 IP，再以 IP 形式交给代理，反而连不上。
 
 ### 影响面与回滚
 
-- 全部是**新增**规则，没有修改或删除任何原有规则（`git diff` 只有 `+`，无 `-`）；
-- 新增域名都是国内 CDN，直连语义与原 `geosite-cn` 一致，不会把需要代理的流量拉进直连；
-- UDP `7784-7800` 不属于任何常见服务端口，不影响其它应用；
-- 如果拦截 P2P 后虎牙反而放不出来（客户端强依赖 P2P、不肯回落 CDN），删掉 `route.rules` 里那条 UDP `reject` 即可，其它改动不受影响。
+- 三份模板的改动**全部是新增**规则，没有修改或删除任何原有规则；
+- 新增域名都是国内 CDN，直连语义与原 `geosite-cn` 一致；
+- `p2p.huya.com` 只影响虎牙的 PCDN 调度，不影响官方 CDN 拉流、弹幕、登录；
+- 如果拦截后虎牙放不出来（客户端强依赖 PCDN、不肯回落），删掉 `route.rules` 里 `p2p.huya.com` 那条 `reject` 和 `dns.rules` 里的 `NXDOMAIN` 即可，其它改动不受影响。
 
 ### 校验
 
