@@ -37,6 +37,43 @@
         "server": "dns-cn"
       },
       {
+        "domain_suffix": [
+          "p2p.huya.com",
+          "va.huya.com"
+        ],
+        "action": "predefined",
+        "rcode": "NXDOMAIN"
+      },
+      {
+        "domain_suffix": [
+          "bilibili.com",
+          "bilivideo.com",
+          "bilivideo.cn",
+          "hdslb.com",
+          "acgvideo.com",
+          "szbdyd.com",
+          "biliapi.net",
+          "biliapi.com",
+          "douyu.com",
+          "douyucdn.cn",
+          "douyucdn.com",
+          "huya.com",
+          "huyacdn.com",
+          "hycdn.cn",
+          "msstatic.com",
+          "huya.biz",
+          "douyinvod.com",
+          "douyincdn.com",
+          "pstatp.com",
+          "byteimg.com",
+          "snssdk.com",
+          "kuaishou.com",
+          "ks-cdn.com"
+        ],
+        "action": "route",
+        "server": "dns-cn"
+      },
+      {
         "clash_mode": "Direct",
         "action": "route",
         "server": "dns-cn"
@@ -92,6 +129,7 @@
         "10.0.0.0/8",
         "172.16.0.0/12",
         "192.168.0.0/16",
+        "100.64.0.0/10",
         "fc00::/7",
         "fe80::/10"
       ]
@@ -213,6 +251,22 @@
       },
       {
         "type": "logical",
+        "mode": "and",
+        "rules": [
+          {
+            "network": "udp"
+          },
+          {
+            "port_range": [
+              "7784:7800"
+            ]
+          }
+        ],
+        "action": "reject",
+        "no_drop": true
+      },
+      {
+        "type": "logical",
         "mode": "or",
         "rules": [
           {
@@ -288,6 +342,35 @@
         ],
         "action": "route",
         "outbound": "谷歌相册"
+      },
+      {
+        "domain_suffix": [
+          "bilibili.com",
+          "bilivideo.com",
+          "bilivideo.cn",
+          "hdslb.com",
+          "acgvideo.com",
+          "szbdyd.com",
+          "biliapi.net",
+          "biliapi.com",
+          "douyu.com",
+          "douyucdn.cn",
+          "douyucdn.com",
+          "huya.com",
+          "huyacdn.com",
+          "hycdn.cn",
+          "msstatic.com",
+          "huya.biz",
+          "douyinvod.com",
+          "douyincdn.com",
+          "pstatp.com",
+          "byteimg.com",
+          "snssdk.com",
+          "kuaishou.com",
+          "ks-cdn.com"
+        ],
+        "action": "route",
+        "outbound": "直连"
       },
       {
         "rule_set": [
