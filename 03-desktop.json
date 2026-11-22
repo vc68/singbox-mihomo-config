@@ -45,6 +45,15 @@
       },
       {
         "domain_suffix": [
+          "bilivideo.cn",
+          "edge.mountaintoys.cn",
+          "bvc.bilivideo.com"
+        ],
+        "action": "predefined",
+        "rcode": "NXDOMAIN"
+      },
+      {
+        "domain_suffix": [
           "bilibili.com",
           "bilivideo.com",
           "bilivideo.cn",
@@ -284,6 +293,15 @@
       {
         "domain_suffix": [
           "p2p.huya.com"
+        ],
+        "action": "reject",
+        "no_drop": true
+      },
+      {
+        "domain_suffix": [
+          "bilivideo.cn",
+          "edge.mountaintoys.cn",
+          "bvc.bilivideo.com"
         ],
         "action": "reject",
         "no_drop": true
